@@ -40,9 +40,11 @@
 static HRESULT (WINAPI *set_thread_description)(HANDLE, PCWSTR);
 
 COLD void dav1d_init_thread(void) {
+#ifndef MS_APP
     set_thread_description =
         (void*)GetProcAddress(GetModuleHandleW(L"kernel32.dll"),
                               "SetThreadDescription");
+#endif
 }
 
 #undef dav1d_set_thread_name
