@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(dav1d VERSION 0.6.0 LANGUAGES C ASM)
+project(dav1d VERSION 0.7.0 LANGUAGES C ASM)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
-find_program(nasm REQUIRED)
+find_program(nasm REQUIRED 2.14)
 
 include(CheckSymbolExists)
 include(CompileAsm)
@@ -15,7 +15,7 @@ check_symbol_exists(_ARM64_ "Windows.h" _ARM64_)
 set(PROJECT_VERSION_REVISION ${PROJECT_VERSION_PATCH})
 set(API_VERSION_MAJOR 4)
 set(API_VERSION_MINOR 0)
-set(API_VERSION_REVISION 0)
+set(API_VERSION_REVISION 1)
 set(COPYRIGHT_YEARS 2019)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/dav1d.rc.in
                ${CMAKE_CURRENT_BINARY_DIR}/dav1d.rc)
@@ -86,7 +86,7 @@ set(libdav1d_sources
     src/picture.c
     src/qm.c
     src/ref.c
-    src/ref_mvs.c
+    src/refmvs.c
     src/scan.c
     src/tables.c
     src/warpmv.c
@@ -188,7 +188,8 @@ elseif(_X86_ OR _AMD64_)
 
   if(_AMD64_)
     list(APPEND libdav1d_sources_asm
-      src/x86/cdef.asm
+      src/x86/cdef_avx2.asm
+      src/x86/cdef_avx512.asm
       src/x86/film_grain.asm
       src/x86/mc.asm
       src/x86/ipred.asm
@@ -234,6 +235,7 @@ target_compile_definitions(dav1d
     _CRT_NONSTDC_NO_WARNINGS
     __PRETTY_FUNCTION__=__FUNCTION__
     DAV1D_BUILDING_DLL
+    
 )
 
 target_compile_definitions(dav1d_bitdepth_8
@@ -255,10 +257,18 @@ if(_X86_)
   target_compile_definitions(dav1d_bitdepth_8
     PRIVATE
       PREFIX=1
+      HAVE_AVX512ICL=1
   )
   target_compile_definitions(dav1d_bitdepth_16
     PRIVATE
       PREFIX=1
+      HAVE_AVX512ICL=1
+  )
+endif()
+if(_AMD64_)
+  target_compile_definitions(dav1d
+    PRIVATE
+      ARCH_X86_64=1
   )
 endif()
 
@@ -266,12 +276,14 @@ if(WINDOWS_STORE)
   target_compile_definitions(dav1d
     PRIVATE
       MS_APP
+      HAVE_AVX512ICL=1
   )
 else()
 target_compile_definitions(dav1d
   PRIVATE
-  _WIN32_IE=0x0600
-  _WIN32_WINNT=0x0600
+    _WIN32_IE=0x0600
+    _WIN32_WINNT=0x0600
+    HAVE_AVX512ICL=1
 )
 target_link_libraries(dav1d
     PRIVATE
@@ -305,7 +317,6 @@ target_link_libraries(dav1d
 target_link_options(dav1d
   PRIVATE
     /debug:full
-    /sdl-
 )
 
 target_include_directories(dav1d_bitdepth_16
