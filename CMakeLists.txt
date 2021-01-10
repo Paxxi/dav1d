@@ -81,6 +81,7 @@ set(libdav1d_sources
     src/itx_1d.c
     src/lf_mask.c
     src/log.c
+    src/mem.c
     src/msac.c
     src/obu.c
     src/picture.c
@@ -191,7 +192,8 @@ elseif(_X86_ OR _AMD64_)
       src/x86/cdef_avx2.asm
       src/x86/cdef_avx512.asm
       src/x86/film_grain.asm
-      src/x86/mc.asm
+      src/x86/mc_avx2.asm
+      src/x86/mc_avx512.asm
       src/x86/ipred.asm
       src/x86/itx.asm
       src/x86/loopfilter.asm
@@ -207,8 +209,8 @@ elseif(_X86_ OR _AMD64_)
     src/x86/ipred_ssse3.asm
     src/x86/itx_ssse3.asm
     src/x86/loopfilter_ssse3.asm
-    src/x86/looprestoration_ssse3.asm
-    src/x86/mc_ssse3.asm
+    src/x86/looprestoration_sse.asm
+    src/x86/mc_sse.asm
     src/x86/msac.asm
   )
 endif()
