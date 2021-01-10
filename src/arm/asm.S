@@ -94,6 +94,8 @@
 #ifdef __ELF__
         .type   EXTERN\name, %function
         .hidden EXTERN\name
+#elif defined(__MACH__)
+        .private_extern EXTERN\name
 #endif
 #if HAVE_AS_FUNC
         .func   EXTERN\name
@@ -110,7 +112,7 @@ EXTERN\name:
 \name:
 .endm
 
-.macro  const   name, align=2
+.macro  const   name, export=0, align=2
     .macro endconst
 #ifdef __ELF__
         .size   \name, . - \name
@@ -125,6 +127,15 @@ EXTERN\name:
         .const_data
 #endif
         .align          \align
+    .if \export
+        .global EXTERN\name
+#ifdef __ELF__
+        .hidden EXTERN\name
+#elif defined(__MACH__)
+        .private_extern EXTERN\name
+#endif
+EXTERN\name:
+    .endif
 \name:
 .endm
 

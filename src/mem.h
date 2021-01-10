@@ -25,8 +25,8 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef DAV1D_COMMON_MEM_H
-#define DAV1D_COMMON_MEM_H
+#ifndef DAV1D_SRC_MEM_H
+#define DAV1D_SRC_MEM_H
 
 #include <stdlib.h>
 
@@ -35,6 +35,25 @@
 #endif
 
 #include "common/attributes.h"
+
+#include "src/thread.h"
+
+typedef struct Dav1dMemPoolBuffer {
+    void *data;
+    struct Dav1dMemPoolBuffer *next;
+} Dav1dMemPoolBuffer;
+
+typedef struct Dav1dMemPool {
+    pthread_mutex_t lock;
+    Dav1dMemPoolBuffer *buf;
+    int ref_cnt;
+    int end;
+} Dav1dMemPool;
+
+void dav1d_mem_pool_push(Dav1dMemPool *pool, Dav1dMemPoolBuffer *buf);
+Dav1dMemPoolBuffer *dav1d_mem_pool_pop(Dav1dMemPool *pool, size_t size);
+int dav1d_mem_pool_init(Dav1dMemPool **pool);
+void dav1d_mem_pool_end(Dav1dMemPool *pool);
 
 /*
  * Allocate align-byte aligned memory. The return value can be released
@@ -81,4 +100,4 @@ static inline void freep(void *ptr) {
     }
 }
 
-#endif /* DAV1D_COMMON_MEM_H */
+#endif /* DAV1D_SRC_MEM_H */

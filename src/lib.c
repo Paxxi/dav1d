@@ -38,7 +38,6 @@
 #include "dav1d/dav1d.h"
 #include "dav1d/data.h"
 
-#include "common/mem.h"
 #include "common/validate.h"
 
 #include "src/cpu.h"
@@ -128,6 +127,19 @@ COLD int dav1d_open(Dav1dContext **const c_out, const Dav1dSettings *const s) {
     c->operating_point = s->operating_point;
     c->all_layers = s->all_layers;
     c->frame_size_limit = s->frame_size_limit;
+
+    if (dav1d_mem_pool_init(&c->seq_hdr_pool) ||
+        dav1d_mem_pool_init(&c->frame_hdr_pool) ||
+        dav1d_mem_pool_init(&c->segmap_pool) ||
+        dav1d_mem_pool_init(&c->refmvs_pool) ||
+        dav1d_mem_pool_init(&c->cdf_pool))
+    {
+        goto error;
+    }
+    if (c->allocator.alloc_picture_callback == dav1d_default_picture_alloc) {
+        if (dav1d_mem_pool_init(&c->picture_pool)) goto error;
+        c->allocator.cookie = c->picture_pool;
+    }
 
     /* On 32-bit systems extremely large frame sizes can cause overflows in
      * dav1d_decode_frame() malloc size calculations. Prevent that from occuring
@@ -571,6 +583,13 @@ static COLD void close_internal(Dav1dContext **const c_out, int flush) {
     dav1d_ref_dec(&c->mastering_display_ref);
     dav1d_ref_dec(&c->content_light_ref);
     dav1d_ref_dec(&c->itut_t35_ref);
+
+    dav1d_mem_pool_end(c->seq_hdr_pool);
+    dav1d_mem_pool_end(c->frame_hdr_pool);
+    dav1d_mem_pool_end(c->segmap_pool);
+    dav1d_mem_pool_end(c->refmvs_pool);
+    dav1d_mem_pool_end(c->cdf_pool);
+    dav1d_mem_pool_end(c->picture_pool);
 
     dav1d_freep_aligned(c_out);
 }

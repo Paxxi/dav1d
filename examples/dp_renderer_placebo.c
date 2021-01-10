@@ -80,7 +80,7 @@ static Dav1dPlayRendererPrivateContext*
     placebo_renderer_create_common(int window_flags)
 {
     // Create Window
-    SDL_Window *sdlwin = dp_create_sdl_window(window_flags);
+    SDL_Window *sdlwin = dp_create_sdl_window(window_flags | SDL_WINDOW_RESIZABLE);
     if (sdlwin == NULL)
         return NULL;
 
@@ -326,6 +326,12 @@ static void placebo_render(void *cookie, const Dav1dPlaySettings *settings)
         .len = 0,
     };
 
+#if PL_API_VER >= 66
+    pl_rect2df_aspect_copy(&target.dst_rect, &rd_priv_ctx->image.src_rect, 0.0);
+    if (pl_render_target_partial(&target))
+        pl_tex_clear(rd_priv_ctx->gpu, target.fbo, (float[4]){ 0.0 });
+#endif
+
     if (!pl_render_image(rd_priv_ctx->renderer, &rd_priv_ctx->image, &target, &render_params)) {
         fprintf(stderr, "Failed rendering frame!\n");
         pl_tex_clear(rd_priv_ctx->gpu, target.fbo, (float[4]){ 1.0 });
@@ -366,6 +372,7 @@ static int placebo_upload_image(void *cookie, Dav1dPicture *dav1d_pic,
         .num_planes = 3,
         .width      = width,
         .height     = height,
+        .src_rect   = {0, 0, width, height},
 
         .repr = {
             .bits = {
@@ -494,7 +501,7 @@ static int placebo_upload_image(void *cookie, Dav1dPicture *dav1d_pic,
             .num_points_uv  = { src->num_uv_points[0], src->num_uv_points[1] },
             .scaling_shift  = src->scaling_shift,
             .ar_coeff_lag   = src->ar_coeff_lag,
-            .ar_coeff_shift = src->ar_coeff_shift,
+            .ar_coeff_shift = (int)src->ar_coeff_shift,
             .grain_scale_shift = src->grain_scale_shift,
             .uv_mult        = { src->uv_mult[0], src->uv_mult[1] },
             .uv_mult_luma   = { src->uv_luma_mult[0], src->uv_luma_mult[1] },
@@ -565,8 +572,12 @@ static int placebo_upload_image(void *cookie, Dav1dPicture *dav1d_pic,
     }
 
     // Apply the correct chroma plane shift. This has to be done after pl_upload_plane
+#if PL_API_VER >= 67
+    pl_image_set_chroma_location(image, chroma_loc);
+#else
     pl_chroma_location_offset(chroma_loc, &image->planes[1].shift_x, &image->planes[1].shift_y);
     pl_chroma_location_offset(chroma_loc, &image->planes[2].shift_x, &image->planes[2].shift_y);
+#endif
 
     if (!ok) {
         fprintf(stderr, "Failed uploading planes!\n");
