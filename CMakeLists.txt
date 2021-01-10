@@ -187,22 +187,15 @@ elseif(_X86_ OR _AMD64_)
     src/x86/mc_init_tmpl.c
   )
 
-  if(_AMD64_)
-    list(APPEND libdav1d_sources_asm
-      src/x86/cdef_avx2.asm
-      src/x86/cdef_avx512.asm
-      src/x86/film_grain.asm
-      src/x86/mc_avx2.asm
-      src/x86/mc_avx512.asm
-      src/x86/ipred.asm
-      src/x86/itx.asm
-      src/x86/loopfilter.asm
-      src/x86/looprestoration.asm
-    )
-  endif()
-
   # NASM source files
   list(APPEND libdav1d_sources_asm
+    src/x86/cdef_avx2.asm
+    src/x86/cdef_avx512.asm
+    src/x86/film_grain.asm
+    src/x86/ipred.asm
+    src/x86/itx.asm
+    src/x86/loopfilter.asm
+    src/x86/looprestoration.asm
     src/x86/cpuid.asm
     src/x86/cdef_sse.asm
     src/x86/film_grain_ssse3.asm
@@ -211,6 +204,8 @@ elseif(_X86_ OR _AMD64_)
     src/x86/loopfilter_ssse3.asm
     src/x86/looprestoration_sse.asm
     src/x86/mc_sse.asm
+    src/x86/mc_avx2.asm
+    src/x86/mc_avx512.asm
     src/x86/msac.asm
   )
 endif()
