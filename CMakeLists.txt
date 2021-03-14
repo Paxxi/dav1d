@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(dav1d VERSION 0.8.1 LANGUAGES C ASM)
+project(dav1d VERSION 0.8.2 LANGUAGES C ASM)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
 find_program(nasm REQUIRED 2.14)
@@ -15,7 +15,7 @@ check_symbol_exists(_ARM64_ "Windows.h" _ARM64_)
 set(PROJECT_VERSION_REVISION ${PROJECT_VERSION_PATCH})
 set(DAV1D_API_VERSION_MAJOR 5)
 set(DAV1D_API_VERSION_MINOR 0)
-set(DAV1D_API_VERSION_REVISION 0)
+set(DAV1D_API_VERSION_REVISION 1)
 set(COPYRIGHT_YEARS 2019)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/src/dav1d.rc.in
                ${CMAKE_CURRENT_BINARY_DIR}/dav1d.rc)
@@ -208,11 +208,15 @@ elseif(_X86_ OR _AMD64_)
     src/x86/mc_avx512.asm
     src/x86/msac.asm
   )
+  list(APPEND libdav1d_sources16_asm
+    src/x86/cdef16_avx2.asm
+    src/x86/cdef16_sse.asm
+    src/x86/looprestoration16_avx2.asm
+  )
 endif()
 
 add_library(dav1d SHARED
   ${libdav1d_sources}
-  ${libdav1d_sources_asm}
   ${libdav1d_nasm_objs}
   ${libdav1d_entrypoints_sources}
 )
@@ -225,8 +229,10 @@ add_library(dav1d_bitdepth_8 STATIC
 )
 
 add_library(dav1d_bitdepth_16 STATIC
+  ${libdav1d_sources_asm}
   ${libdav1d_tmpl_sources}
   ${libdav1d_arch_tmpl_sources}
+  ${libdav1d_sources16_asm}
 )
 
 target_compile_definitions(dav1d
