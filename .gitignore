@@ -9,3 +9,4 @@ tags
 include/dav1d/version.h
 include/vcs_version.h
 .vscode/settings.json
+/tools/output/xxhash.h
