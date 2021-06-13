@@ -7,6 +7,8 @@
 
 %define PIC 1
 
+%define HAVE_PREFIX @HAVE_PREFIX@
+
 %define private_prefix dav1d
 
 %define STACK_ALIGNMENT @STACK_ALIGNMENT@

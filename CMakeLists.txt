@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.14)
 project(dav1d VERSION 0.8.2 LANGUAGES C ASM)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules)
-find_program(nasm REQUIRED 2.14)
 
 include(CheckSymbolExists)
 include(CompileAsm)
@@ -38,25 +37,29 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/dav1d/version.h.in
 
 set(STACK_ALIGNMENT 0)
 set(ARCH_AARCH64 0)
+set(HAVE_PREFIX 0)
+set(ARCH_X86 0)
+set(HAVE_ASM 0)
+set(ARCH_X86_32 0)
+set(ARCH_X86_64 0)
 if(_ARM64_)
   set(ARCH_AARCH64 1)
+  set(HAVE_PREFIX 1)
 endif()
 set(ARCH_ARM 0)
 if(_ARM_)
   set(ARCH_ARM 1)
+  set(HAVE_PREFIX 1)
 endif()
-set(ARCH_X86 0)
-set(HAVE_ASM 0)
 if(_X86_ OR _AMD64_)
   set(ARCH_X86 1)
   set(HAVE_ASM 1)
 endif()
-set(ARCH_X86_32 0)
 if(_X86_)
   set(ARCH_X86_32 1)
   set(STACK_ALIGNMENT 4)
+  set(HAVE_PREFIX 1)
 endif()
-set(ARCH_X86_64 0)
 if(_AMD64_)
   set(ARCH_X86_64 1)
   set(STACK_ALIGNMENT 16)
@@ -132,43 +135,48 @@ set(libdav1d_nasm_objs)
 # Arch-specific flags
 set(arch_flags)
 if (_ARM64_ OR _ARM_)
-  # enable_language(ASM_ARMASM)
-  # list(APPEND libdav1d_sources src/arm/cpu.c)
-  # list(APPEND libdav1d_tmpl_sources
-  #     src/arm/cdef_init_tmpl.c
-  #     src/arm/ipred_init_tmpl.c
-  #     src/arm/itx_init_tmpl.c
-  #     src/arm/loopfilter_init_tmpl.c
-  #     src/arm/looprestoration_init_tmpl.c
-  #     src/arm/mc_init_tmpl.c
-  # )
-  # if(_ARM64_)
-  #   list(APPEND libdav1d_sources_asm
-  #     src/arm/64/looprestoration_common.S
-  #     src/arm/64/msac.S
-  #     src/arm/64/cdef.S
-  #     src/arm/64/ipred.S
-  #     src/arm/64/itx.S
-  #     src/arm/64/loopfilter.S
-  #     src/arm/64/looprestoration.S
-  #     src/arm/64/mc.S
-  #     src/arm/64/cdef16.S
-  #     src/arm/64/loopfilter16.S
-  #     src/arm/64/looprestoration16.S
-  #     src/arm/64/mc16.S
-  #   )
-  # elseif(_ARM_)
-  #   list(APPEND libdav1d_sources_asm
-  #     src/arm/32/cdef.S
-  #     src/arm/32/ipred.S
-  #     src/arm/32/loopfilter.S
-  #     src/arm/32/looprestoration.S
-  #     src/arm/32/mc.S
-  #   )
-  # endif()
+  #enable_language(ASM_ARMASM)
+  list(APPEND libdav1d_sources src/arm/cpu.c)
+  list(APPEND libdav1d_tmpl_sources
+      src/arm/cdef_init_tmpl.c
+      src/arm/ipred_init_tmpl.c
+      src/arm/itx_init_tmpl.c
+      src/arm/loopfilter_init_tmpl.c
+      src/arm/looprestoration_init_tmpl.c
+      src/arm/mc_init_tmpl.c
+  )
+  if(_ARM64_)
+    list(APPEND libdav1d_sources_asm
+      src/arm/64/looprestoration_common.S
+      src/arm/64/msac.S
+      src/arm/64/cdef.S
+      src/arm/64/ipred.S
+      src/arm/64/itx.S
+      src/arm/64/loopfilter.S
+      src/arm/64/looprestoration.S
+      src/arm/64/mc.S
+      src/arm/64/cdef16.S
+      src/arm/64/loopfilter16.S
+      src/arm/64/looprestoration16.S
+      src/arm/64/mc16.S
+    )
+  elseif(_ARM_)
+    list(APPEND libdav1d_sources_asm
+      src/arm/32/cdef.S
+      src/arm/32/ipred.S
+      src/arm/32/loopfilter.S
+      src/arm/32/looprestoration.S
+      src/arm/32/mc.S
+    )
+  endif()
+  #set_source_files_properties(src/arm/64/*.S
+  #  PROPERTIES
+  #    LANGUAGE ASM_ARMASM 
+  #)
   # compile_asm(libdav1d_nasm_objs
   #   SOURCES
-  #     ${libdav1d_sources_asm})
+  #     ${libdav1d_sources_asm}
+  # )
 elseif(_X86_ OR _AMD64_)
   enable_language(ASM_NASM)
   list(APPEND libdav1d_sources src/x86/cpu.c)
